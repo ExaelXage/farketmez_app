@@ -290,6 +290,25 @@ class ApiService {
     return places;
   }
 
+  Future<Map<String, dynamic>> getRoom(String code) async {
+    final response = await _dio.get('/api/rooms/$code');
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  Future<Map<String, dynamic>> rejoinRoom({
+    required String code,
+    required String token,
+  }) async {
+    final response = await _dio.post(
+      '/api/rooms/$code/rejoin',
+      data: jsonEncode({'token': token}),
+      options: _plainOpts,
+    );
+    final data = Map<String, dynamic>.from(response.data);
+    if (data['token'] != null) _setToken(data['token']);
+    return data;
+  }
+
   Future<Map<String, dynamic>> castVote({
     required String code,
     required int placeId,

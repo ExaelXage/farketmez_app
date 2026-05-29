@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +49,9 @@ class _RoomScreenState extends State<RoomScreen>
   final Set<String> _selectedWaitingCategories = {};
   double? _searchLat;
   double? _searchLng;
+  Timer? _pollTimer;
+  String _lastKnownStatus = 'waiting';
+  bool _navigatedToResults = false;
   final MapController _mapController = MapController();
   late TabController _tabController;
 
@@ -62,57 +66,80 @@ class _RoomScreenState extends State<RoomScreen>
     _participants = widget.initialParticipants;
     _maxVotes = widget.maxVotes;
     _tabController = TabController(length: 2, vsync: this);
-    _initSocket();
+    _startPolling();
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _tabController.dispose();
-    apiService.disposeSocket();
     super.dispose();
   }
 
-  // ── Socket ───────────────────────────────────────────────────────────────
-  void _initSocket() {
-    apiService.initSocket(
-      roomCode: widget.roomCode,
-      nickname: widget.nickname,
-      onParticipantsUpdate: (p) {
-        if (mounted) setState(() => _participants = p);
-      },
-      onPlacesLoaded: (places) {
-        if (mounted) {
-          setState(() {
-            _places = places;
-            _isVoting = true;
-            _isStarting = false;
-            _activeFilter = null;
-            _activeFoodFilter = null;
-          });
+  // ── Polling ──────────────────────────────────────────────────────────────
+  void _startPolling() {
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _pollRoom());
+  }
+
+  Future<void> _pollRoom() async {
+    if (_navigatedToResults) return;
+    try {
+      final data = await apiService.getRoom(widget.roomCode);
+      if (!mounted || _navigatedToResults) return;
+
+      final newParticipants = List<Map<String, dynamic>>.from(data['participants'] ?? []);
+      final newStatus       = (data['status'] as String?) ?? 'waiting';
+
+      // Katılımcı listesi değiştiyse güncelle
+      if (_participantsChanged(newParticipants)) {
+        setState(() => _participants = newParticipants);
+      }
+
+      // Durum geçişlerini işle
+      if (newStatus != _lastKnownStatus) {
+        _lastKnownStatus = newStatus;
+
+        if (newStatus == 'voting' && !_isVoting) {
+          final rawPlaces = List<Map<String, dynamic>>.from(data['places'] ?? []);
+          if (rawPlaces.isNotEmpty) {
+            setState(() {
+              _places         = rawPlaces.map((p) => Place.fromJson(p)).toList();
+              _isVoting       = true;
+              _isStarting     = false;
+              _activeFilter   = null;
+              _activeFoodFilter = null;
+            });
+          }
+        } else if (newStatus == 'completed') {
+          _goToResults(data);
         }
-      },
-      onVoteUpdate: (_) {},
-      onShowResults: (data) {
-        if (!mounted) return;
-        final summary = List<Map<String, dynamic>>.from(data['summary'] ?? []);
-        final allPlaces = summary.map((p) => Place.fromJson(p)).toList();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ResultScreen(
-              winners: allPlaces.where((p) => p.votes > 0).toList(),
-              allPlaces: allPlaces,
-            ),
-          ),
-        );
-      },
-      onError: (msg) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg), backgroundColor: AppTheme.error),
-          );
-        }
-      },
+      }
+    } catch (_) {
+      // Polling hataları sessizce görmezden gel
+    }
+  }
+
+  bool _participantsChanged(List<Map<String, dynamic>> newP) {
+    if (newP.length != _participants.length) return true;
+    final oldNames = _participants.map((p) => p['nickname']).toSet();
+    final newNames = newP.map((p) => p['nickname']).toSet();
+    return !oldNames.containsAll(newNames) || !newNames.containsAll(oldNames);
+  }
+
+  void _goToResults(Map<String, dynamic> data) {
+    if (_navigatedToResults || !mounted) return;
+    _navigatedToResults = true;
+    _pollTimer?.cancel();
+    final summary   = List<Map<String, dynamic>>.from(data['summary'] ?? []);
+    final allPlaces = summary.map((p) => Place.fromJson(p)).toList();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResultScreen(
+          winners:   allPlaces.where((p) => p.votes > 0).toList(),
+          allPlaces: allPlaces,
+        ),
+      ),
     );
   }
 
@@ -338,6 +365,8 @@ class _RoomScreenState extends State<RoomScreen>
         allPlaces = voted.isNotEmpty ? voted : all;
       }
 
+      _navigatedToResults = true;
+      _pollTimer?.cancel();
       final winners = allPlaces.where((p) => p.votes > 0).toList();
 
       Navigator.pushReplacement(

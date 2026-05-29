@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
+import '../services/session_service.dart';
 import '../theme.dart';
 import 'room_screen.dart';
 
@@ -80,8 +82,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         lng: _position?.longitude,
       );
       if (!mounted) return;
+      final code = data['code'] ?? '';
+      await SessionService.save(
+        roomCode: code,
+        token: data['token'] ?? '',
+        nickname: _nickname,
+        isHost: true,
+        category: data['category'] ?? _selectedCategory,
+      );
       Navigator.push(context, _FadeSlideRoute(child: RoomScreen(
-        roomCode: data['code'] ?? '',
+        roomCode: code,
         nickname: _nickname,
         isHost: true,
         category: data['category'] ?? _selectedCategory,
@@ -101,21 +111,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (code.isEmpty) { _showError('Lütfen oda kodunu girin'); return; }
     setState(() => _isLoading = true);
     try {
+      // Önce kaydedilmiş session varsa rejoin dene
+      final saved = await SessionService.load(code);
+      if (saved != null && saved['token'] != null) {
+        try {
+          final data = await apiService.rejoinRoom(code: code, token: saved['token']);
+          if (!mounted) return;
+          _navigateToRoom(
+            code: code,
+            nickname: saved['nickname'] ?? _nickname,
+            isHost: saved['isHost'] == true,
+            category: data['category'] ?? saved['category'] ?? 'food',
+            participants: List<Map<String, dynamic>>.from(data['participants'] ?? []),
+          );
+          return;
+        } on DioException catch (e) {
+          if (e.response?.statusCode == 403 || e.response?.statusCode == 404) {
+            await SessionService.clear(code);
+          } else {
+            rethrow;
+          }
+        }
+      }
+
+      // Normal katılım
       final data = await apiService.joinRoom(code: code, nickname: _nickname);
       if (!mounted) return;
-      Navigator.push(context, _FadeSlideRoute(child: RoomScreen(
+      await SessionService.save(
         roomCode: code,
+        token: data['token'] ?? '',
         nickname: _nickname,
         isHost: false,
         category: data['category'] ?? 'food',
-        initialParticipants: List<Map<String, dynamic>>.from(data['participants'] ?? []),
-        maxVotes: 3,
-      )));
+      );
+      _navigateToRoom(
+        code: code,
+        nickname: _nickname,
+        isHost: false,
+        category: data['category'] ?? 'food',
+        participants: List<Map<String, dynamic>>.from(data['participants'] ?? []),
+      );
+    } on DioException catch (e) {
+      final msg = e.response?.data is Map
+          ? (e.response!.data['error'] ?? 'Odaya katılınamadı')
+          : 'Odaya katılınamadı: $e';
+      _showError(msg);
     } catch (e) {
       _showError('Odaya katılınamadı: $e');
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _navigateToRoom({
+    required String code,
+    required String nickname,
+    required bool isHost,
+    required String category,
+    required List<Map<String, dynamic>> participants,
+  }) {
+    Navigator.push(context, _FadeSlideRoute(child: RoomScreen(
+      roomCode: code,
+      nickname: nickname,
+      isHost: isHost,
+      category: category,
+      initialParticipants: participants,
+      maxVotes: 3,
+    )));
   }
 
   void _showError(String msg) {
