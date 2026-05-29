@@ -171,29 +171,17 @@ class _RoomScreenState extends State<RoomScreen>
     // ── 2. Mekanları ara ────────────────────────────────────────────────────
     setState(() => _startingMessage = 'Mekanlar aranıyor...');
     try {
-      final List<Place> places;
-      if (widget.category == 'food') {
-        final cats = _selectedWaitingCategories.isEmpty
-            ? ['Tümü']
-            : _selectedWaitingCategories.toList();
-        places = await apiService.searchPlacesOverpass(
-          lat: lat,
-          lng: lng,
-          categories: cats,
-        );
-      } else {
-        places = await apiService.searchPlaces(
-          code: widget.roomCode,
-          lat: lat,
-          lng: lng,
-          onRetry: (attempt) {
-            if (mounted) {
-              setState(() =>
-                  _startingMessage = 'Sunucu uyandırılıyor... ($attempt/3)');
-            }
-          },
-        );
-      }
+      final places = await apiService.searchPlaces(
+        code: widget.roomCode,
+        lat: lat,
+        lng: lng,
+        onRetry: (attempt) {
+          if (mounted) {
+            setState(() =>
+                _startingMessage = 'Sunucu uyandırılıyor... ($attempt/3)');
+          }
+        },
+      );
 
       debugPrint('[Room] ${places.length} mekan geldi');
       if (!mounted) return;
@@ -1290,12 +1278,12 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() => _isAddingCategory = true);
     try {
       final existingIds = _places.map((p) => p.id).toSet();
-      final newPlaces = await apiService.searchPlacesOverpass(
+      final allPlaces = await apiService.searchPlaces(
+        code: widget.roomCode,
         lat: _searchLat!,
         lng: _searchLng!,
-        categories: categories,
-        excludeIds: existingIds,
       );
+      final newPlaces = allPlaces.where((p) => !existingIds.contains(p.id)).toList();
       if (!mounted) return;
       setState(() {
         _places = [..._places, ...newPlaces];

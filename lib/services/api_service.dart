@@ -222,8 +222,11 @@ class ApiService {
 
     final response = await overpassDio.post(
       'https://overpass-api.de/api/interpreter',
-      data: query,
-      options: Options(contentType: 'text/plain'),
+      data: 'data=${Uri.encodeComponent(query)}',
+      options: Options(
+        contentType: 'application/x-www-form-urlencoded',
+        headers: {'Accept': 'application/json'},
+      ),
     );
 
     final raw = response.data is String
