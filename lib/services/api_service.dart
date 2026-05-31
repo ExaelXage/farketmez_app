@@ -20,6 +20,7 @@ class ApiService {
 
   io.Socket? socket;
   String? _token;
+  final Map<String, (DateTime, Map<String, dynamic>)> _roomCache = {};
 
   ApiService() {
     _dio.interceptors.add(LogInterceptor(
@@ -291,9 +292,17 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getRoom(String code) async {
+    final cached = _roomCache[code];
+    if (cached != null && DateTime.now().difference(cached.$1).inMilliseconds < 1500) {
+      return cached.$2;
+    }
     final response = await _dio.get('/api/rooms/$code');
-    return Map<String, dynamic>.from(response.data);
+    final data = Map<String, dynamic>.from(response.data);
+    _roomCache[code] = (DateTime.now(), data);
+    return data;
   }
+
+  void invalidateRoomCache(String code) => _roomCache.remove(code);
 
   Future<Map<String, dynamic>> rejoinRoom({
     required String code,

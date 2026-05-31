@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1030,15 +1031,21 @@ class _RoomScreenState extends State<RoomScreen>
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemCount: places.length,
-      itemBuilder: (_, i) => _PlaceListItem(
-        place: places[i],
-        myVote: _myVotes[places[i].id],
-        votesUsed: _votesUsed,
-        maxVotes: _maxVotes,
-        onVote: (value) => _vote(places[i], value),
+    return RepaintBoundary(
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        itemCount: places.length,
+        itemBuilder: (_, i) => RepaintBoundary(
+          child: _PlaceListItem(
+            place: places[i],
+            myVote: _myVotes[places[i].id],
+            votesUsed: _votesUsed,
+            maxVotes: _maxVotes,
+            searchLat: _searchLat,
+            searchLng: _searchLng,
+            onVote: (value) => _vote(places[i], value),
+          ),
+        ),
       ),
     );
   }
@@ -1454,6 +1461,8 @@ class _PlaceListItem extends StatelessWidget {
   final int? myVote;
   final int votesUsed;
   final int maxVotes;
+  final double? searchLat;
+  final double? searchLng;
   final void Function(int value) onVote;
 
   const _PlaceListItem({
@@ -1462,16 +1471,44 @@ class _PlaceListItem extends StatelessWidget {
     required this.votesUsed,
     required this.maxVotes,
     required this.onVote,
+    this.searchLat,
+    this.searchLng,
   });
+
+  static double _haversine(double lat1, double lon1, double lat2, double lon2) {
+    const R = 6371000.0;
+    final dLat = (lat2 - lat1) * math.pi / 180;
+    final dLon = (lon2 - lon1) * math.pi / 180;
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1 * math.pi / 180) *
+            math.cos(lat2 * math.pi / 180) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+  }
+
+  String? get _distanceStr {
+    if (searchLat == null || searchLng == null) return null;
+    final d = _haversine(searchLat!, searchLng!, place.lat, place.lng);
+    return d < 1000 ? '${d.round()} m' : '${(d / 1000).toStringAsFixed(1)} km';
+  }
+
+  static String _formatCount(int n) {
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n >= 10000 ? 0 : 1)}B';
+    return '$n';
+  }
+
+  static String _priceStr(int level) => '\$' * level;
 
   @override
   Widget build(BuildContext context) {
-    final liked = myVote == 1;
-    final disliked = myVote == -1;
-    final hasSlot = votesUsed < maxVotes;
-    final canLike = liked || hasSlot;
+    final liked      = myVote == 1;
+    final disliked   = myVote == -1;
+    final hasSlot    = votesUsed < maxVotes;
+    final canLike    = liked || hasSlot;
     final canDislike = disliked || hasSlot;
     final accentColor = liked ? AppTheme.success : disliked ? AppTheme.error : AppTheme.primary;
+    final distStr = _distanceStr;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -1496,7 +1533,6 @@ class _PlaceListItem extends StatelessWidget {
         child: IntrinsicHeight(
           child: Row(
             children: [
-              // Colored accent bar
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 5,
@@ -1504,10 +1540,10 @@ class _PlaceListItem extends StatelessWidget {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(
                     children: [
-                      // Icon box
+                      // Icon
                       Container(
                         width: 48,
                         height: 48,
@@ -1522,7 +1558,7 @@ class _PlaceListItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Name & address
+                      // Info column
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1534,26 +1570,23 @@ class _PlaceListItem extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
+                            // Metadata row: rating · price · distance · open
+                            _MetaRow(place: place, distStr: distStr),
+                            const SizedBox(height: 4),
+                            // Address
                             Row(children: [
-                              Icon(Icons.location_on, size: 12, color: AppTheme.textSecondary),
-                              const SizedBox(width: 3),
-                              Expanded(child: Text(place.address,
-                                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                                  maxLines: 1, overflow: TextOverflow.ellipsis)),
-                            ]),
-                            if (place.types.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primary.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(5),
+                              const Icon(Icons.location_on, size: 11, color: AppTheme.textSecondary),
+                              const SizedBox(width: 2),
+                              Expanded(
+                                child: Text(
+                                  place.address,
+                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                child: Text(place.types.first,
-                                    style: const TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.w600)),
                               ),
-                            ],
+                            ]),
                           ],
                         ),
                       ),
@@ -1585,6 +1618,85 @@ class _PlaceListItem extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _MetaRow extends StatelessWidget {
+  final Place place;
+  final String? distStr;
+  const _MetaRow({required this.place, this.distStr});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Widget>[];
+
+    // Rating
+    if (place.rating != null) {
+      items.add(Row(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.star_rounded, size: 13, color: Colors.amber),
+        const SizedBox(width: 2),
+        Text(
+          place.rating!.toStringAsFixed(1),
+          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+        if (place.userRatingCount > 0)
+          Text(
+            ' (${_fmt(place.userRatingCount)})',
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+          ),
+      ]));
+    }
+
+    // Price level
+    if (place.priceLevel != null && place.priceLevel! > 0) {
+      items.add(Text(
+        '\$' * place.priceLevel!,
+        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
+      ));
+    }
+
+    // Distance
+    if (distStr != null) {
+      items.add(Row(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.near_me_rounded, size: 11, color: AppTheme.textSecondary),
+        const SizedBox(width: 2),
+        Text(distStr!, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+      ]));
+    }
+
+    // Open / Closed
+    if (place.openNow != null) {
+      final open = place.openNow!;
+      items.add(Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+          color: (open ? Colors.green : Colors.red).withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          open ? 'Açık' : 'Kapalı',
+          style: TextStyle(
+            color: open ? Colors.green : Colors.red,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ));
+    }
+
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 2,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: items,
+    );
+  }
+
+  static String _fmt(int n) {
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n >= 10000 ? 0 : 1)}B';
+    return '$n';
   }
 }
 
