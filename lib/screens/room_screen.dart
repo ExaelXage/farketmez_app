@@ -1063,9 +1063,8 @@ class _RoomScreenState extends State<RoomScreen>
       options: MapOptions(initialCenter: center, initialZoom: 14),
       children: [
         TileLayer(
-          urlTemplate:
-              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.example.farketmez_app',
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.farketmez.app',
         ),
         MarkerLayer(
           markers: places.map((place) {
