@@ -1542,18 +1542,63 @@ class _PlaceListItem extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(
                     children: [
-                      // Icon
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          liked ? Icons.favorite : disliked ? Icons.close : Icons.restaurant,
-                          color: accentColor,
-                          size: 24,
+                      // Photo thumbnail (or icon fallback) with vote badge
+                      SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                width: 56,
+                                height: 56,
+                                color: accentColor.withValues(alpha: 0.12),
+                                child: place.photoUrl != null
+                                    ? Image.network(
+                                        place.photoUrl!,
+                                        width: 56,
+                                        height: 56,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Center(
+                                          child: Icon(
+                                            liked ? Icons.favorite : disliked ? Icons.close : Icons.restaurant,
+                                            color: accentColor,
+                                            size: 24,
+                                          ),
+                                        ),
+                                      )
+                                    : Center(
+                                        child: Icon(
+                                          liked ? Icons.favorite : disliked ? Icons.close : Icons.restaurant,
+                                          color: accentColor,
+                                          size: 24,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            if (liked || disliked)
+                              Positioned(
+                                bottom: 2,
+                                right: 2,
+                                child: Container(
+                                  width: 18,
+                                  height: 18,
+                                  decoration: BoxDecoration(
+                                    color: accentColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 1.5),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      liked ? Icons.favorite : Icons.close,
+                                      color: Colors.white,
+                                      size: 9,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 12),

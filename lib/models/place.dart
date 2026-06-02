@@ -11,6 +11,7 @@ class Place {
   final int userRatingCount;
   final int? priceLevel;  // 1=$  2=$$  3=$$$  4=$$$$
   final bool? openNow;
+  final String? photoUrl;
 
   Place({
     required this.id,
@@ -25,6 +26,7 @@ class Place {
     this.userRatingCount = 0,
     this.priceLevel,
     this.openNow,
+    this.photoUrl,
   });
 
   factory Place.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class Place {
       userRatingCount:  json['user_rating_count'] ?? 0,
       priceLevel:       json['price_level'],
       openNow:          openNow,
+      photoUrl:         json['photo_url'] as String?,
     );
   }
 }
