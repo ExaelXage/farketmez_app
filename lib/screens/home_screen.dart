@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
 import '../services/session_service.dart';
 import '../theme.dart';
+import '../utils/error_utils.dart';
 import 'room_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String _selectedCategory = 'food';
   int _selectedVoteCount = 3;
   bool _isLoading = false;
+  bool _isOffline = false;
   Position? _position;
 
   late final AnimationController _logoEntryCtrl;
@@ -82,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         lng: _position?.longitude,
       );
       if (!mounted) return;
+      setState(() => _isOffline = false);
       final code = data['code'] ?? '';
       await SessionService.save(
         roomCode: code,
@@ -99,7 +102,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         maxVotes: _selectedVoteCount,
       )));
     } catch (e) {
-      _showError('Oda oluşturulamadı: $e');
+      if (isConnectionError(e)) setState(() => _isOffline = true);
+      _showError(toTurkishError(e));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -137,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Normal katılım
       final data = await apiService.joinRoom(code: code, nickname: _nickname);
       if (!mounted) return;
+      setState(() => _isOffline = false);
       await SessionService.save(
         roomCode: code,
         token: data['token'] ?? '',
@@ -151,13 +156,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         category: data['category'] ?? 'food',
         participants: List<Map<String, dynamic>>.from(data['participants'] ?? []),
       );
-    } on DioException catch (e) {
-      final msg = e.response?.data is Map
-          ? (e.response!.data['error'] ?? 'Odaya katılınamadı')
-          : 'Odaya katılınamadı: $e';
-      _showError(msg);
     } catch (e) {
-      _showError('Odaya katılınamadı: $e');
+      if (isConnectionError(e)) setState(() => _isOffline = true);
+      _showError(toTurkishError(e));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -217,6 +218,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: Stack(
         children: [
           Container(decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient)),
+          // Offline banner
+          if (_isOffline)
+            Positioned(
+              top: 0, left: 0, right: 0,
+              child: SafeArea(
+                bottom: false,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    color: const Color(0xFFB91C1C).withValues(alpha: 0.92),
+                    child: Row(children: [
+                      const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'İnternet bağlantısı yok — bağlantınızı kontrol edin',
+                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => setState(() => _isOffline = false),
+                        child: const Icon(Icons.close, color: Colors.white70, size: 18),
+                      ),
+                    ]),
+                  ),
+                ),
+              ),
+            ),
           AnimatedBuilder(
             animation: _orbCtrl,
             builder: (_, __) {

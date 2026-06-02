@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 import '../models/place.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
+import '../utils/error_utils.dart';
 import 'result_screen.dart';
 
 class RoomScreen extends StatefulWidget {
@@ -53,6 +54,8 @@ class _RoomScreenState extends State<RoomScreen>
   Timer? _pollTimer;
   String _lastKnownStatus = 'waiting';
   bool _navigatedToResults = false;
+  bool _isOffline = false;
+  int _pollFailCount = 0;
   final MapController _mapController = MapController();
   late TabController _tabController;
 
@@ -115,8 +118,13 @@ class _RoomScreenState extends State<RoomScreen>
           _goToResults(data);
         }
       }
-    } catch (_) {
-      // Polling hataları sessizce görmezden gel
+      _pollFailCount = 0;
+      if (_isOffline) setState(() => _isOffline = false);
+    } catch (e) {
+      _pollFailCount++;
+      if (_pollFailCount >= 3 && isConnectionError(e) && !_isOffline) {
+        setState(() => _isOffline = true);
+      }
     }
   }
 
@@ -231,14 +239,18 @@ class _RoomScreenState extends State<RoomScreen>
         _isStarting = false;
         _activeFilter = null;
         _activeFoodFilter = null;
+        _isOffline = false;
       });
     } catch (e) {
       debugPrint('[Room] _startVoting error: $e');
       if (!mounted) return;
-      setState(() => _isStarting = false);
+      setState(() {
+        _isStarting = false;
+        if (isConnectionError(e)) _isOffline = true;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Mekanlar yüklenemedi: $e'),
+          content: Text(toTurkishError(e)),
           backgroundColor: AppTheme.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -383,7 +395,7 @@ class _RoomScreenState extends State<RoomScreen>
       setState(() => _isFinishing = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Hata: $e'),
+          content: Text(toTurkishError(e)),
           backgroundColor: AppTheme.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -473,7 +485,10 @@ class _RoomScreenState extends State<RoomScreen>
   // WAITING VIEW
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildWaitingView() {
-    return Padding(
+    return Column(
+      children: [
+        _buildOfflineBanner(),
+        Expanded(child: Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -491,6 +506,8 @@ class _RoomScreenState extends State<RoomScreen>
           if (widget.isHost) _buildStartButton() else _buildWaitingForHost(),
         ],
       ),
+    )),
+      ],
     );
   }
 
@@ -798,9 +815,37 @@ class _RoomScreenState extends State<RoomScreen>
   // ──────────────────────────────────────────────────────────────────────────
   // VOTING VIEW
   // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildOfflineBanner() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: _isOffline ? null : 0,
+      child: _isOffline
+          ? Container(
+              color: const Color(0xFFB91C1C).withValues(alpha: 0.92),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              child: Row(children: [
+                const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 16),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'İnternet bağlantısı yok',
+                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => _isOffline = false),
+                  child: const Icon(Icons.close, color: Colors.white70, size: 16),
+                ),
+              ]),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
   Widget _buildVotingView() {
     return Column(
       children: [
+        _buildOfflineBanner(),
         _buildVotingHeader(),
         _buildVoteCounter(),
         _buildCategoryFilters(),
@@ -1345,7 +1390,7 @@ class _RoomScreenState extends State<RoomScreen>
       setState(() => _isAddingCategory = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Mekanlar yüklenemedi: $e'),
+          content: Text(toTurkishError(e)),
           backgroundColor: AppTheme.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -1491,13 +1536,6 @@ class _PlaceListItem extends StatelessWidget {
     final d = _haversine(searchLat!, searchLng!, place.lat, place.lng);
     return d < 1000 ? '${d.round()} m' : '${(d / 1000).toStringAsFixed(1)} km';
   }
-
-  static String _formatCount(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n >= 10000 ? 0 : 1)}B';
-    return '$n';
-  }
-
-  static String _priceStr(int level) => '\$' * level;
 
   @override
   Widget build(BuildContext context) {

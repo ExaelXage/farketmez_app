@@ -49,5 +49,7 @@
 	<string>Farketmez, yakınındaki mekanları bulabilmek için konumuna ihtiyaç duyar.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Farketmez, yakınındaki mekanları bulabilmek için konumuna ihtiyaç duyar.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Farketmez, yakınındaki mekanları bulabilmek için konumuna ihtiyaç duyar.</string>
 </dict>
 </plist>
