@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
+import '../services/profile_service.dart';
 import '../services/session_service.dart';
 import '../theme.dart';
 import '../utils/error_utils.dart';
+import 'profile_screen.dart';
 import 'room_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -48,6 +50,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _requestLocation();
     NotificationService.init();
+    _loadSavedNickname();
+  }
+
+  Future<void> _loadSavedNickname() async {
+    final nick = await ProfileService.getNickname();
+    if (nick != null && nick.isNotEmpty && mounted) {
+      _nicknameController.text = nick;
+    }
   }
 
   @override
@@ -88,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (!mounted) return;
       setState(() => _isOffline = false);
       final code = data['code'] ?? '';
+      ProfileService.saveNickname(_nickname);
       await SessionService.save(
         roomCode: code,
         token: data['token'] ?? '',
@@ -148,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final data = await apiService.joinRoom(code: code, nickname: _nickname);
       if (!mounted) return;
       setState(() => _isOffline = false);
+      ProfileService.saveNickname(_nickname);
       await SessionService.save(
         roomCode: code,
         token: data['token'] ?? '',
@@ -270,6 +282,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: _GlowOrb(size: 180, color: AppTheme.primary.withValues(alpha: 0.06))),
               ]);
             },
+          ),
+          // Profile button top-right
+          Positioned(
+            top: 0, right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, right: 12),
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  ).then((_) => _loadSavedNickname()),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.border),
+                    ),
+                    child: const Icon(
+                      Icons.person_outline_rounded,
+                      color: AppTheme.textSecondary,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
           SafeArea(
             child: SingleChildScrollView(

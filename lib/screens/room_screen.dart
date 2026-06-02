@@ -8,7 +8,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/place.dart';
+import '../models/room_history.dart';
 import '../services/api_service.dart';
+import '../services/profile_service.dart';
 import '../theme.dart';
 import '../utils/error_utils.dart';
 import 'result_screen.dart';
@@ -141,6 +143,23 @@ class _RoomScreenState extends State<RoomScreen>
     _pollTimer?.cancel();
     final summary   = List<Map<String, dynamic>>.from(data['summary'] ?? []);
     final allPlaces = summary.map((p) => Place.fromJson(p)).toList();
+
+    // Save room history
+    if (allPlaces.isNotEmpty) {
+      final winner = allPlaces.first;
+      final didVote = _myVotes[winner.id] == 1;
+      final participants = List<Map<String, dynamic>>.from(data['participants'] ?? _participants);
+      ProfileService.addToHistory(RoomHistoryEntry(
+        roomCode:         widget.roomCode,
+        myNickname:       widget.nickname,
+        winnerName:       winner.name,
+        winnerAddress:    winner.address,
+        completedAt:      DateTime.now(),
+        participantCount: participants.length,
+        didVoteForWinner: didVote,
+      ));
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -381,6 +400,21 @@ class _RoomScreenState extends State<RoomScreen>
       _navigatedToResults = true;
       _pollTimer?.cancel();
       final winners = allPlaces.where((p) => p.votes > 0).toList();
+
+      // Save room history
+      if (allPlaces.isNotEmpty) {
+        final winner = allPlaces.first;
+        final didVote = _myVotes[winner.id] == 1;
+        ProfileService.addToHistory(RoomHistoryEntry(
+          roomCode:         widget.roomCode,
+          myNickname:       widget.nickname,
+          winnerName:       winner.name,
+          winnerAddress:    winner.address,
+          completedAt:      DateTime.now(),
+          participantCount: _participants.length,
+          didVoteForWinner: didVote,
+        ));
+      }
 
       Navigator.pushReplacement(
         context,
