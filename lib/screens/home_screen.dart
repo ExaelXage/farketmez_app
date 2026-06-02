@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../services/session_service.dart';
 import '../theme.dart';
 import '../utils/error_utils.dart';
@@ -46,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ..repeat(reverse: true);
 
     _requestLocation();
+    NotificationService.init();
   }
 
   @override
@@ -93,6 +95,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         isHost: true,
         category: data['category'] ?? _selectedCategory,
       );
+      // Register FCM token with backend in background
+      NotificationService.getToken().then((fcmToken) {
+        if (fcmToken != null) apiService.updateFcmToken(code, fcmToken);
+      });
       Navigator.push(context, _FadeSlideRoute(child: RoomScreen(
         roomCode: code,
         nickname: _nickname,
@@ -149,6 +155,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         isHost: false,
         category: data['category'] ?? 'food',
       );
+      // Register FCM token with backend in background
+      NotificationService.getToken().then((fcmToken) {
+        if (fcmToken != null) apiService.updateFcmToken(code, fcmToken);
+      });
       _navigateToRoom(
         code: code,
         nickname: _nickname,

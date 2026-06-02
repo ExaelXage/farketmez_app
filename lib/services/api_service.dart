@@ -345,6 +345,18 @@ class ApiService {
     return Map<String, dynamic>.from(response.data);
   }
 
+  Future<void> updateFcmToken(String code, String fcmToken) async {
+    try {
+      await _dio.post(
+        '/api/rooms/$code/fcm-token',
+        data: _body({'fcm_token': fcmToken}),
+        options: _plainOpts,
+      );
+    } catch (e) {
+      debugPrint('[FCM] Token gönderilemedi: $e');
+    }
+  }
+
   // ── Socket.IO ───────────────────────────────────────────────────────────────
 
   void initSocket({
