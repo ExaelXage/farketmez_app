@@ -786,15 +786,13 @@ class _RoomScreenState extends State<RoomScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          gradient: _isStarting ? null : AppTheme.primaryGradient,
-          color: _isStarting ? AppTheme.surface : null,
+          gradient: AppTheme.primaryGradient,
           borderRadius: BorderRadius.circular(16),
           boxShadow: _isStarting
               ? null
               : [
                   BoxShadow(
-                    color:
-                        AppTheme.primary.withValues(alpha: 0.4),
+                    color: AppTheme.primary.withValues(alpha: 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   )
@@ -806,23 +804,35 @@ class _RoomScreenState extends State<RoomScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(
-                      width: 18,
-                      height: 18,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
                     ),
                     const SizedBox(width: 12),
-                    Text(_startingMessage,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 15)),
+                    Text(
+                      _startingMessage,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600),
+                    ),
                   ],
                 )
-              : const Text(
-                  'Oylamayı Başlat',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white),
+              : const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Oylamayı Başlat',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                    ),
+                  ],
                 ),
         ),
       ),

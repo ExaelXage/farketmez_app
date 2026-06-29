@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
@@ -129,8 +130,7 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGradient,
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(26),
                             boxShadow: [
                               BoxShadow(
                                 color: AppTheme.primary.withValues(alpha: 0.6),
@@ -144,15 +144,12 @@ class _SplashScreenState extends State<SplashScreen>
                               ),
                             ],
                           ),
-                          child: const Center(
-                            child: Text(
-                              'F',
-                              style: TextStyle(
-                                fontSize: 66,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                height: 1.1,
-                              ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(26),
+                            child: SvgPicture.asset(
+                              'assets/logo.svg',
+                              width: 120,
+                              height: 120,
                             ),
                           ),
                         ),

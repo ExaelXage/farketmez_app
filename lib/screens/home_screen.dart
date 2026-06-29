@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
@@ -371,15 +372,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 width: 112,
                 height: 112,
                 decoration: BoxDecoration(
-                  gradient: AppTheme.primaryGradient,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(color: AppTheme.primary.withValues(alpha: 0.55), blurRadius: 44, offset: const Offset(0, 16)),
                     BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.25), blurRadius: 80, offset: const Offset(0, 28)),
                   ],
                 ),
-                child: const Center(
-                  child: Text('F', style: TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: SvgPicture.asset('assets/logo.svg', width: 112, height: 112),
                 ),
               ),
             ]),
