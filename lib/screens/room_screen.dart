@@ -487,16 +487,23 @@ class _RoomScreenState extends State<RoomScreen>
 
   String _categoryLabel(String raw) {
     const labels = {
-      'restaurant': 'Restoran',
-      'cafe': 'Kafe',
-      'fast_food': 'Fast Food',
-      'bakery': 'Pastane',
-      'bar': 'Bar',
-      'pub': 'Pub',
-      'ice_cream': 'Dondurma',
-      'cinema': 'Sinema',
-      'theatre': 'Tiyatro',
-      'park': 'Park',
+      'restaurant':    'Restoran',
+      'cafe':          'Kafe',
+      'fast_food':     'Fast Food',
+      'bakery':        'Pastane',
+      'bar':           'Bar',
+      'meal_takeaway': 'Paket Servis',
+      'meal_delivery': 'Teslimat',
+      'pub':           'Pub',
+      'ice_cream':     'Dondurma',
+      'park':          'Park',
+      'museum':        'Müze',
+      'movie_theater': 'Sinema',
+      'bowling_alley': 'Bowling',
+      'amusement_park':'Eğlence Parkı',
+      'night_club':    'Gece Kulübü',
+      'cinema':        'Sinema',
+      'theatre':       'Tiyatro',
     };
     return labels[raw] ?? raw;
   }
