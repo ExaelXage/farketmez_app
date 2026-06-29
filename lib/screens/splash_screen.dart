@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 import 'home_screen.dart';
 import 'onboarding_screen.dart';
@@ -17,6 +20,9 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _scale;
   late final Animation<double> _fade;
   late final Animation<double> _textFade;
+
+  bool _showWarmup = false;
+  bool _warmupDone = false;
 
   @override
   void initState() {
@@ -37,8 +43,33 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _ctrl.forward();
+    _startup();
+  }
 
-    Future.delayed(const Duration(milliseconds: 2000), _goHome);
+  Future<void> _startup() async {
+    // Minimum 2 saniye splash göster; aynı anda backend'i uyandır
+    Timer(const Duration(seconds: 2), () {
+      if (mounted && !_warmupDone) setState(() => _showWarmup = true);
+    });
+
+    await Future.wait([
+      _pingBackend(),
+      Future<void>.delayed(const Duration(milliseconds: 2000)),
+    ]);
+
+    if (mounted) _goHome();
+  }
+
+  Future<void> _pingBackend() async {
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+      ));
+      await dio.get('${ApiService.baseUrl}/api/health');
+    } catch (_) {}
+    _warmupDone = true;
+    if (mounted) setState(() => _showWarmup = false);
   }
 
   Future<void> _goHome() async {
@@ -154,6 +185,13 @@ class _SplashScreenState extends State<SplashScreen>
                               letterSpacing: 0.2,
                             ),
                           ),
+                          const SizedBox(height: 32),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            child: _showWarmup
+                                ? _WarmupIndicator(key: const ValueKey('warmup'))
+                                : const SizedBox(key: ValueKey('empty'), height: 36),
+                          ),
                         ],
                       ),
                     ),
@@ -164,6 +202,38 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _WarmupIndicator extends StatelessWidget {
+  const _WarmupIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppTheme.secondary.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Sunucu uyandırılıyor...',
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary.withValues(alpha: 0.8),
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
     );
   }
 }
