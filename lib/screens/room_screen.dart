@@ -44,7 +44,8 @@ class _RoomScreenState extends State<RoomScreen>
   List<Place> _places = [];
   Map<int, int> _myVotes = {}; // placeId → +1 / -1
   String? _activeFilter; // null = tümü
-  String? _activeFoodFilter; // null = tüm yemek alt kategorileri
+  String? _activeFoodFilter;
+  String? _activeActivityFilter;
   bool _isVoting = false;
   bool _isStarting = false;
   String _startingMessage = 'Mekanlar aranıyor...';
@@ -112,8 +113,9 @@ class _RoomScreenState extends State<RoomScreen>
               _places         = rawPlaces.map((p) => Place.fromJson(p)).toList();
               _isVoting       = true;
               _isStarting     = false;
-              _activeFilter   = null;
-              _activeFoodFilter = null;
+              _activeFilter         = null;
+              _activeFoodFilter     = null;
+              _activeActivityFilter = null;
             });
           }
         } else if (newStatus == 'completed') {
@@ -458,6 +460,21 @@ class _RoomScreenState extends State<RoomScreen>
     for (final c in _foodCategoryList) c.$1: c.$4,
   };
 
+  // key → (emoji, displayLabel, matching-google-types)
+  static final _activityCategoryList = <(String, String, String, List<String>)>[
+    ('bar',        '🍺', 'Bar',          ['bar']),
+    ('night_club', '🎵', 'Gece Kulübü',  ['night_club']),
+    ('karaoke',    '🎤', 'Karaoke',      ['karaoke']),
+    ('game',       '🎮', 'Oyun Kafesi',  ['video_arcade', 'internet_cafe', 'amusement_center']),
+    ('escape',     '🔐', 'Escape Room',  ['amusement_center', 'tourist_attraction']),
+    ('park',       '🌳', 'Park',         ['park', 'national_park', 'dog_park', 'hiking_area']),
+    ('cinema',     '🎬', 'Sinema',       ['movie_theater']),
+  ];
+
+  static Map<String, List<String>> get _activitySubcategories => {
+    for (final c in _activityCategoryList) c.$1: c.$4,
+  };
+
   List<Place> get _filteredPlaces {
     var places = _activeFilter == null
         ? _places
@@ -471,6 +488,13 @@ class _RoomScreenState extends State<RoomScreen>
         final name = p.name.toLowerCase();
         return keywords.any((k) => name.contains(k));
       }).toList();
+    }
+
+    if (widget.category == 'activity' && _activeActivityFilter != null) {
+      final matchTypes = _activitySubcategories[_activeActivityFilter] ?? [];
+      places = places
+          .where((p) => p.types.any((t) => matchTypes.contains(t)))
+          .toList();
     }
 
     return places;
@@ -501,9 +525,13 @@ class _RoomScreenState extends State<RoomScreen>
       'movie_theater': 'Sinema',
       'bowling_alley': 'Bowling',
       'amusement_park':'Eğlence Parkı',
-      'night_club':    'Gece Kulübü',
-      'cinema':        'Sinema',
-      'theatre':       'Tiyatro',
+      'night_club':      'Gece Kulübü',
+      'comedy_club':     'Komedi Kulübü',
+      'karaoke':         'Karaoke',
+      'video_arcade':    'Oyun Salonu',
+      'amusement_center':'Eğlence Merkezi',
+      'cinema':          'Sinema',
+      'theatre':         'Tiyatro',
     };
     return labels[raw] ?? raw;
   }
@@ -1106,6 +1134,30 @@ class _RoomScreenState extends State<RoomScreen>
                       label: c.$3,
                       isSelected: _activeFoodFilter == c.$1,
                       onTap: () => setState(() => _activeFoodFilter = c.$1),
+                    )),
+              ],
+            ),
+          ),
+        ],
+        if (widget.category == 'activity') ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 46,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                _EmojiFilterChip(
+                  emoji: '✨',
+                  label: 'Hepsi',
+                  isSelected: _activeActivityFilter == null,
+                  onTap: () => setState(() => _activeActivityFilter = null),
+                ),
+                ..._activityCategoryList.map((c) => _EmojiFilterChip(
+                      emoji: c.$2,
+                      label: c.$3,
+                      isSelected: _activeActivityFilter == c.$1,
+                      onTap: () => setState(() => _activeActivityFilter = c.$1),
                     )),
               ],
             ),

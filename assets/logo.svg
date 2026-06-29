@@ -5,30 +5,25 @@
       <stop offset="100%" stop-color="#06B6D4"/>
     </linearGradient>
     <linearGradient id="gi" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6D28D9"/>
-      <stop offset="100%" stop-color="#0891B2"/>
+      <stop offset="0%" stop-color="#5B21B6"/>
+      <stop offset="100%" stop-color="#0E7490"/>
     </linearGradient>
   </defs>
 
   <!-- Gradient background (rounded square) -->
   <rect width="512" height="512" rx="110" fill="url(#g)"/>
 
-  <!-- White location pin: circle top + tapered wings to tip -->
+  <!-- White location pin: bulbous circle top + wings narrowing to tip -->
   <circle cx="256" cy="196" r="122" fill="white"/>
-  <path fill="white" d="M 140 240 Q 144 348 256 434 Q 368 348 372 240 Z"/>
+  <path fill="white" d="M 140 242 Q 144 350 256 434 Q 368 350 372 242 Z"/>
 
-  <!-- Gradient inner circle — creates depth inside the pin -->
-  <circle cx="256" cy="192" r="76" fill="url(#gi)"/>
+  <!-- Inner gradient circle — depth effect inside pin -->
+  <circle cx="256" cy="192" r="78" fill="url(#gi)"/>
 
-  <!-- Fork (left) -->
-  <rect x="204" y="140" width="7" height="53" rx="3.5" fill="white"/>
-  <rect x="219" y="140" width="7" height="53" rx="3.5" fill="white"/>
-  <rect x="234" y="140" width="7" height="53" rx="3.5" fill="white"/>
-  <rect x="204" y="187" width="37" height="7" rx="3.5" fill="white"/>
-  <rect x="215" y="194" width="7" height="58" rx="3.5" fill="white"/>
-
-  <!-- Knife (right): blade + bolster + handle -->
-  <path fill="white" d="M 271 140 L 271 190 L 288 190 Q 300 164 286 140 Z"/>
-  <rect x="269" y="188" width="21" height="7" rx="3" fill="white"/>
-  <rect x="274" y="195" width="7" height="57" rx="3.5" fill="white"/>
+  <!-- 5-pointed star centered at (256,169) outer-r=46 inner-r=19
+       Outer: (256,123) (299,154) (283,203) (229,203) (213,154)
+       Inner (interleaved): (271,154) (276,174) (256,188) (236,174) (241,154) -->
+  <polygon
+    points="256,123 271,154 299,154 276,174 283,203 256,188 229,203 236,174 213,154 241,154"
+    fill="white"/>
 </svg>
