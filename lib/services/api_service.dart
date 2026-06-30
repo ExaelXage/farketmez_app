@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../models/place.dart';
+import 'device_service.dart';
 
 class ApiService {
   static const String baseUrl = 'https://farketmez-ls1o.onrender.com';
@@ -23,14 +24,19 @@ class ApiService {
   final Map<String, (DateTime, Map<String, dynamic>)> _roomCache = {};
 
   ApiService() {
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      requestHeader: true,
-      responseHeader: false,
-      error: true,
-      logPrint: (o) => debugPrint('[DIO] $o'),
-    ));
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        requestHeader: true,
+        responseHeader: false,
+        error: true,
+        logPrint: (o) => debugPrint('[DIO] $o'),
+      ));
+    }
+    // Cihaz ID'sini en başta önbelleğe al; createRoom/joinRoom çağrıldığında
+    // ayrıca beklemeye gerek kalmaz (splash ekranı zaten birkaç saniye sürer).
+    DeviceService.getDeviceId();
   }
 
   void _setToken(String token) {
@@ -58,6 +64,7 @@ class ApiService {
     double? lat,
     double? lng,
   }) async {
+    final deviceId = await DeviceService.getDeviceId();
     // ignore: avoid_print
     print('[FARKETMEZ] POST $baseUrl/api/rooms  nickname=$nickname category=$category');
     final response = await _dio.post(
@@ -65,6 +72,7 @@ class ApiService {
       data: _body({
         'nickname': nickname,
         'category': category,
+        'device_id': deviceId,
         if (lat != null) 'lat': lat,
         if (lng != null) 'lng': lng,
       }),
@@ -81,11 +89,12 @@ class ApiService {
     required String code,
     required String nickname,
   }) async {
+    final deviceId = await DeviceService.getDeviceId();
     // ignore: avoid_print
     print('[FARKETMEZ] POST $baseUrl/api/rooms/$code/join  nickname=$nickname');
     final response = await _dio.post(
       '/api/rooms/$code/join',
-      data: _body({'nickname': nickname}),
+      data: _body({'nickname': nickname, 'device_id': deviceId}),
       options: _plainOpts,
     );
     // ignore: avoid_print
@@ -308,9 +317,10 @@ class ApiService {
     required String code,
     required String token,
   }) async {
+    final deviceId = await DeviceService.getDeviceId();
     final response = await _dio.post(
       '/api/rooms/$code/rejoin',
-      data: jsonEncode({'token': token}),
+      data: jsonEncode({'token': token, 'device_id': deviceId}),
       options: _plainOpts,
     );
     final data = Map<String, dynamic>.from(response.data);

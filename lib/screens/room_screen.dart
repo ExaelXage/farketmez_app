@@ -38,7 +38,7 @@ class RoomScreen extends StatefulWidget {
 }
 
 class _RoomScreenState extends State<RoomScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   // ── State ────────────────────────────────────────────────────────────────
   List<Map<String, dynamic>> _participants = [];
   List<Place> _places = [];
@@ -73,14 +73,31 @@ class _RoomScreenState extends State<RoomScreen>
     _participants = widget.initialParticipants;
     _maxVotes = widget.maxVotes;
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addObserver(this);
     _startPolling();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pollTimer?.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Uygulama arka plandayken gereksiz API çağrısı yapmamak için polling'i
+    // duraklat; ön plana dönünce hemen bir kez sorgula ve yeniden başlat.
+    if (state == AppLifecycleState.resumed) {
+      if (_pollTimer == null && !_navigatedToResults) {
+        _pollRoom();
+        _startPolling();
+      }
+    } else {
+      _pollTimer?.cancel();
+      _pollTimer = null;
+    }
   }
 
   // ── Polling ──────────────────────────────────────────────────────────────
