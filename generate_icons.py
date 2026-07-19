@@ -1,6 +1,6 @@
 """
-Farketmez launcher icon generator — "F" monogram curling into a "?" hook
-Design matches assets/logo.svg exactly.
+Farketmez launcher icon generator — lowercase "f" whose foot curls into "?"
+Cropped/centered version of the "f" glyph used in assets/logo.svg's wordmark.
 """
 import os
 from PIL import Image, ImageDraw, ImageFilter
@@ -13,8 +13,8 @@ SIZES = {
     "mipmap-xxxhdpi": 192,
 }
 
-NAVY  = (15, 23, 42)     # #0F172A
-TEAL  = (6, 182, 212)    # #06B6D4
+NAVY = (15, 23, 42)     # #0F172A
+TEAL = (6, 182, 212)    # #06B6D4
 
 SCALE = 4   # supersample factor for smooth anti-aliasing
 
@@ -54,15 +54,24 @@ def make_icon(final_size):
     S = final_size * SCALE   # work at higher resolution
     f = lambda v: v / 512 * S   # scale a 512-design coordinate into S-space
 
-    bg_radius   = f(108)
-    stroke_w    = round(f(44))
+    bg_radius = f(108)
+    stroke_w  = round(f(35))
 
-    top_bar     = [(f(326), f(100)), (f(206), f(100))]
-    stem        = [(f(206), f(100)), (f(206), f(270))]
-    mid_bar     = [(f(206), f(160)), (f(271), f(160))]
-    hook        = (quad_bezier_pts((f(206), f(270)), (f(290), f(275)), (f(275), f(320))) +
-                   quad_bezier_pts((f(275), f(320)), (f(255), f(355)), (f(205), f(368))))
-    dot_c, dot_r = (f(205), f(405)), f(14)
+    stem_top  = (f(224), f(139))
+    hook_start = (f(276), f(100))
+    top_ctrl  = (f(227), f(86))
+    stem_bot  = (f(224), f(244))
+    seg1_ctrl = (f(341), f(251))
+    seg1_end  = (f(320), f(314))
+    seg2_ctrl = (f(292), f(363))
+    seg2_end  = (f(222), f(380))
+    cross     = [(f(171), f(160)), (f(267), f(160))]
+    dot_c, dot_r = (f(222), f(301)), f(16)
+
+    glyph_path = (quad_bezier_pts(hook_start, top_ctrl, stem_top) +
+                  [stem_bot] +
+                  quad_bezier_pts(stem_bot, seg1_ctrl, seg1_end)[1:] +
+                  quad_bezier_pts(seg1_end, seg2_ctrl, seg2_end)[1:])
 
     # 1. Navy rounded-square background
     img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
@@ -70,15 +79,14 @@ def make_icon(final_size):
     navy_layer = Image.new("RGBA", (S, S), NAVY + (255,))
     img.paste(navy_layer, mask=mask)
 
-    # 2. Build the monogram stroke on its own layer (for shadow + compositing)
+    # 2. Build the glyph stroke on its own layer (for glow + compositing)
     glyph = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glyph)
-    draw_stroke_path(gd, stem + hook[1:], stroke_w, TEAL + (255,))
-    draw_stroke_path(gd, top_bar, stroke_w, TEAL + (255,))
-    draw_stroke_path(gd, mid_bar, stroke_w, TEAL + (255,))
+    draw_stroke_path(gd, glyph_path, stroke_w, TEAL + (255,))
+    draw_stroke_path(gd, cross, stroke_w, TEAL + (255,))
     gd.ellipse([dot_c[0] - dot_r, dot_c[1] - dot_r, dot_c[0] + dot_r, dot_c[1] + dot_r], fill=TEAL + (255,))
 
-    # 3. Soft glow/shadow behind the glyph
+    # 3. Soft glow behind the glyph
     glow_alpha = glyph.split()[3]
     glow = Image.new("RGBA", (S, S), TEAL + (140,))
     glow.putalpha(glow_alpha)

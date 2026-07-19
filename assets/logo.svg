@@ -1,19 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <filter id="shadow" x="-30%" y="-20%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="8" stdDeviation="14"
-        flood-color="#06B6D4" flood-opacity="0.35"/>
-    </filter>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260">
+  <!-- Dark navy background banner -->
+  <rect width="720" height="260" rx="42" fill="#0F172A"/>
 
-  <!-- Dark navy background (rounded square / launcher icon) -->
-  <rect width="512" height="512" rx="108" fill="#0F172A"/>
-
-  <!-- Monogram: top half reads as "F", stem curls into a "?" hook at the bottom -->
-  <g filter="url(#shadow)" fill="none" stroke="#06B6D4" stroke-width="44"
+  <!-- Wordmark: "f" curls into a "?" at its foot, then reads on as "arketmez" -->
+  <g fill="none" stroke="#06B6D4" stroke-width="20"
      stroke-linecap="round" stroke-linejoin="round">
-    <path d="M326,100 L206,100 L206,270 Q290,275 275,320 Q255,355 205,368"/>
-    <path d="M206,160 L271,160"/>
+    <path d="M125,58 Q97,50 95,80 L95,140 Q162,144 150,180 Q134,208 94,218"/>
+    <path d="M65,92 L120,92"/>
   </g>
-  <circle cx="205" cy="405" r="14" fill="#06B6D4"/>
+  <circle cx="94" cy="235" r="9" fill="#06B6D4"/>
+
+  <text x="195" y="140"
+        font-family="Roboto, 'Segoe UI', Arial, sans-serif"
+        font-size="104" font-weight="600"
+        fill="#FFFFFF" letter-spacing="1">arketmez</text>
 </svg>

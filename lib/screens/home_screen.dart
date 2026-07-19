@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../services/profile_service.dart';
@@ -356,47 +355,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: AnimatedBuilder(
             animation: _logoPulse,
             builder: (_, child) => Transform.scale(scale: _logoPulse.value, child: child),
-            child: Stack(alignment: Alignment.center, children: [
-              Container(
-                width: 148,
-                height: 148,
+            child: SizedBox(
+              width: 260,
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppTheme.primary.withValues(alpha: 0.22),
-                    AppTheme.secondary.withValues(alpha: 0.10),
-                    Colors.transparent,
-                  ]),
-                ),
-              ),
-              Container(
-                width: 112,
-                height: 112,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(18),
                   boxShadow: [
-                    BoxShadow(color: AppTheme.primary.withValues(alpha: 0.55), blurRadius: 44, offset: const Offset(0, 16)),
-                    BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.25), blurRadius: 80, offset: const Offset(0, 28)),
+                    BoxShadow(color: AppTheme.primary.withValues(alpha: 0.5), blurRadius: 40, offset: const Offset(0, 14)),
+                    BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.28), blurRadius: 70, offset: const Offset(0, 24)),
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: SvgPicture.asset('assets/logo.svg', width: 112, height: 112),
+                  borderRadius: BorderRadius.circular(18),
+                  child: AspectRatio(
+                    aspectRatio: 720 / 260,
+                    child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
+                  ),
                 ),
               ),
-            ]),
+            ),
           ),
         ),
         const SizedBox(height: 24),
-        Text('farketmez',
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 44,
-              fontWeight: FontWeight.w600,
-              fontStyle: FontStyle.italic,
-              color: Colors.white,
-              letterSpacing: 0.5,
-            )),
-        const SizedBox(height: 8),
         Text('Nereye gidilir karar verelim',
             style: TextStyle(fontSize: 15, color: AppTheme.textSecondary, letterSpacing: 0.2)),
       ],

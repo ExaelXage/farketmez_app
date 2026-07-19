@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
@@ -111,67 +110,39 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Glow halo
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(colors: [
-                              AppTheme.primary.withValues(alpha: 0.25),
-                              AppTheme.secondary.withValues(alpha: 0.10),
-                              Colors.transparent,
-                            ]),
-                          ),
-                        ),
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(26),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primary.withValues(alpha: 0.6),
-                                blurRadius: 50,
-                                offset: const Offset(0, 18),
-                              ),
-                              BoxShadow(
-                                color: AppTheme.secondary.withValues(alpha: 0.28),
-                                blurRadius: 90,
-                                offset: const Offset(0, 32),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(26),
-                            child: SvgPicture.asset(
-                              'assets/logo.svg',
-                              width: 120,
-                              height: 120,
+                    // Wordmark logo (navy banner, "f" curling into "?")
+                    SizedBox(
+                      width: 280,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primary.withValues(alpha: 0.5),
+                              blurRadius: 40,
+                              offset: const Offset(0, 14),
                             ),
+                            BoxShadow(
+                              color: AppTheme.secondary.withValues(alpha: 0.3),
+                              blurRadius: 70,
+                              offset: const Offset(0, 26),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: AspectRatio(
+                            aspectRatio: 720 / 260,
+                            child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 32),
                     FadeTransition(
                       opacity: _textFade,
                       child: Column(
                         children: [
-                          Text(
-                            'farketmez',
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 42,
-                              fontWeight: FontWeight.w600,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
                           Text(
                             'Nereye gidilir karar verelim',
                             style: TextStyle(
