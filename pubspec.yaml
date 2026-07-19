@@ -31,9 +31,3 @@ flutter:
 
   assets:
     - assets/logo.svg
-
-  fonts:
-    - family: PlayfairDisplay
-      fonts:
-        - asset: assets/fonts/PlayfairDisplay-Italic.ttf
-          style: italic

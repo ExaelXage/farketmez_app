@@ -357,9 +357,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             builder: (_, child) => Transform.scale(scale: _logoPulse.value, child: child),
             child: SizedBox(
               width: 300,
-              child: AspectRatio(
-                aspectRatio: 820 / 260,
-                child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 26,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: AspectRatio(
+                  aspectRatio: 900 / 220,
+                  child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
+                ),
               ),
             ),
           ),

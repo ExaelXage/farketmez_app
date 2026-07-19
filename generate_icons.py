@@ -1,5 +1,5 @@
 """
-Farketmez launcher icon generator — mirrored "?" with a crossbar (reads as "F")
+Farketmez launcher icon generator — clockwise curl + crossbar + dot (reads as "F")
 Same glyph geometry as the first character in assets/logo.svg, centered and
 enlarged on a navy square for use as the Android launcher icon.
 """
@@ -19,18 +19,16 @@ TEAL = (6, 182, 212)    # #06B6D4
 
 SCALE = 4   # supersample factor for smooth anti-aliasing
 
-# ── glyph geometry (identical to the "?" in assets/logo.svg's wordmark) ────────
-# Cubic-bezier hook (mirrored question mark) + connector into the stem.
+# ── glyph geometry (identical to the first symbol in assets/logo.svg) ─────────
 HOOK_CUBICS = [
-    ((138.3, 57.9), (124.8, 41.8), (102.7, 35.8), (82.9, 43)),
-    ((82.9, 43),    (63.1, 50.2),  (50, 69),       (50, 90)),
-    ((50, 90),      (50, 111),     (63.1, 129.8),  (82.9, 137)),
-    ((82.9, 137),   (102.7, 144.2),(124.8, 138.2), (138.3, 122.1)),
+    ((134.5, 61.1),  (122.3, 46.6), (102.4, 41.2), (84.6, 47.7)),
+    ((84.6, 47.7),   (66.8, 54.2),  (55, 71.1),     (55, 90)),
+    ((55, 90),       (55, 108.9),   (66.8, 125.8),  (84.6, 132.3)),
+    ((84.6, 132.3),  (102.4, 138.8),(122.3, 133.4), (134.5, 118.9)),
 ]
-CONNECTOR = ((138.3, 122.1), (125, 148), (103, 160))   # quadratic
-STEM = [(103, 160), (103, 195)]
-CROSSBAR = [(65, 153), (143, 153)]
-DOT = (103, 225, 12)
+STEM = [(134.5, 118.9), (134.5, 170)]
+CROSSBAR = [(99.5, 144), (169.5, 144)]
+DOT = (134.5, 198, 11)
 
 
 def cubic_pts(p0, c1, c2, p3, steps=40):
@@ -44,21 +42,10 @@ def cubic_pts(p0, c1, c2, p3, steps=40):
     return pts
 
 
-def quad_pts(p0, p1, p2, steps=30):
-    pts = []
-    for i in range(steps + 1):
-        t = i / steps
-        x = (1-t)**2*p0[0] + 2*t*(1-t)*p1[0] + t**2*p2[0]
-        y = (1-t)**2*p0[1] + 2*t*(1-t)*p1[1] + t**2*p2[1]
-        pts.append((x, y))
-    return pts
-
-
 def build_glyph_path():
     pts = [HOOK_CUBICS[0][0]]
     for p0, c1, c2, p3 in HOOK_CUBICS:
         pts += cubic_pts(p0, c1, c2, p3)[1:]
-    pts += quad_pts(*CONNECTOR)[1:]
     pts += STEM[1:]
     return pts
 
@@ -102,7 +89,7 @@ def make_icon(final_size):
         x, y = tf(p)
         return (x / 512 * S, y / 512 * S)
 
-    stroke_w  = round(30 * scale / 512 * S)
+    stroke_w  = round(13 * scale / 512 * S)
     bg_radius = round(108 / 512 * S)
     dot_r     = DOT[2] * scale / 512 * S
 
