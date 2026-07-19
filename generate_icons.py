@@ -1,6 +1,7 @@
 """
-Farketmez launcher icon generator — lowercase "f" whose foot curls into "?"
-Cropped/centered version of the "f" glyph used in assets/logo.svg's wordmark.
+Farketmez launcher icon generator — mirrored "?" with a crossbar (reads as "F")
+Same glyph geometry as the first character in assets/logo.svg, centered and
+enlarged on a navy square for use as the Android launcher icon.
 """
 import os
 from PIL import Image, ImageDraw, ImageFilter
@@ -18,17 +19,47 @@ TEAL = (6, 182, 212)    # #06B6D4
 
 SCALE = 4   # supersample factor for smooth anti-aliasing
 
+# ── glyph geometry (identical to the "?" in assets/logo.svg's wordmark) ────────
+# Cubic-bezier hook (mirrored question mark) + connector into the stem.
+HOOK_CUBICS = [
+    ((138.3, 57.9), (124.8, 41.8), (102.7, 35.8), (82.9, 43)),
+    ((82.9, 43),    (63.1, 50.2),  (50, 69),       (50, 90)),
+    ((50, 90),      (50, 111),     (63.1, 129.8),  (82.9, 137)),
+    ((82.9, 137),   (102.7, 144.2),(124.8, 138.2), (138.3, 122.1)),
+]
+CONNECTOR = ((138.3, 122.1), (125, 148), (103, 160))   # quadratic
+STEM = [(103, 160), (103, 195)]
+CROSSBAR = [(65, 153), (143, 153)]
+DOT = (103, 225, 12)
 
-# ── helpers ────────────────────────────────────────────────────────────────────
 
-def quad_bezier_pts(p0, p1, p2, steps=48):
-    """Quadratic bezier from p0 via control p1 to p2."""
+def cubic_pts(p0, c1, c2, p3, steps=40):
     pts = []
     for i in range(steps + 1):
         t = i / steps
-        x = (1 - t) ** 2 * p0[0] + 2 * t * (1 - t) * p1[0] + t ** 2 * p2[0]
-        y = (1 - t) ** 2 * p0[1] + 2 * t * (1 - t) * p1[1] + t ** 2 * p2[1]
+        mt = 1 - t
+        x = mt**3*p0[0] + 3*mt**2*t*c1[0] + 3*mt*t**2*c2[0] + t**3*p3[0]
+        y = mt**3*p0[1] + 3*mt**2*t*c1[1] + 3*mt*t**2*c2[1] + t**3*p3[1]
         pts.append((x, y))
+    return pts
+
+
+def quad_pts(p0, p1, p2, steps=30):
+    pts = []
+    for i in range(steps + 1):
+        t = i / steps
+        x = (1-t)**2*p0[0] + 2*t*(1-t)*p1[0] + t**2*p2[0]
+        y = (1-t)**2*p0[1] + 2*t*(1-t)*p1[1] + t**2*p2[1]
+        pts.append((x, y))
+    return pts
+
+
+def build_glyph_path():
+    pts = [HOOK_CUBICS[0][0]]
+    for p0, c1, c2, p3 in HOOK_CUBICS:
+        pts += cubic_pts(p0, c1, c2, p3)[1:]
+    pts += quad_pts(*CONNECTOR)[1:]
+    pts += STEM[1:]
     return pts
 
 
@@ -39,8 +70,6 @@ def rounded_rect_mask(s, radius):
 
 
 def draw_stroke_path(draw, points, width, fill):
-    """Draw a polyline as stamped round segments — avoids PIL's joint
-    artifacts on tight curves by circle-capping every sampled point."""
     r = width / 2
     for i in range(len(points) - 1):
         draw.line([points[i], points[i + 1]], fill=fill, width=width)
@@ -48,43 +77,48 @@ def draw_stroke_path(draw, points, width, fill):
         draw.ellipse([p[0] - r, p[1] - r, p[0] + r, p[1] + r], fill=fill)
 
 
-# ── icon builder ───────────────────────────────────────────────────────────────
+def fit_transform(all_points, target_size, padding_frac=0.16):
+    xs = [p[0] for p in all_points]
+    ys = [p[1] for p in all_points]
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    w, h = max(xs) - min(xs), max(ys) - min(ys)
+    usable = target_size * (1 - 2 * padding_frac)
+    scale = usable / max(w, h)
+
+    def tf(p):
+        return ((p[0] - cx) * scale + target_size / 2,
+                 (p[1] - cy) * scale + target_size / 2)
+    return tf, scale
+
 
 def make_icon(final_size):
-    S = final_size * SCALE   # work at higher resolution
-    f = lambda v: v / 512 * S   # scale a 512-design coordinate into S-space
+    S = final_size * SCALE
 
-    bg_radius = f(108)
-    stroke_w  = round(f(35))
+    glyph_path = build_glyph_path()
+    all_pts = glyph_path + CROSSBAR + [(DOT[0], DOT[1])]
+    tf, scale = fit_transform(all_pts, 512)
 
-    stem_top  = (f(224), f(139))
-    hook_start = (f(276), f(100))
-    top_ctrl  = (f(227), f(86))
-    stem_bot  = (f(224), f(244))
-    seg1_ctrl = (f(341), f(251))
-    seg1_end  = (f(320), f(314))
-    seg2_ctrl = (f(292), f(363))
-    seg2_end  = (f(222), f(380))
-    cross     = [(f(171), f(160)), (f(267), f(160))]
-    dot_c, dot_r = (f(222), f(301)), f(16)
+    def F(p):
+        x, y = tf(p)
+        return (x / 512 * S, y / 512 * S)
 
-    glyph_path = (quad_bezier_pts(hook_start, top_ctrl, stem_top) +
-                  [stem_bot] +
-                  quad_bezier_pts(stem_bot, seg1_ctrl, seg1_end)[1:] +
-                  quad_bezier_pts(seg1_end, seg2_ctrl, seg2_end)[1:])
+    stroke_w  = round(30 * scale / 512 * S)
+    bg_radius = round(108 / 512 * S)
+    dot_r     = DOT[2] * scale / 512 * S
 
     # 1. Navy rounded-square background
     img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    mask = rounded_rect_mask(round(S), round(bg_radius))
+    mask = rounded_rect_mask(round(S), bg_radius)
     navy_layer = Image.new("RGBA", (S, S), NAVY + (255,))
     img.paste(navy_layer, mask=mask)
 
-    # 2. Build the glyph stroke on its own layer (for glow + compositing)
+    # 2. Glyph on its own layer (for glow + compositing)
     glyph = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glyph)
-    draw_stroke_path(gd, glyph_path, stroke_w, TEAL + (255,))
-    draw_stroke_path(gd, cross, stroke_w, TEAL + (255,))
-    gd.ellipse([dot_c[0] - dot_r, dot_c[1] - dot_r, dot_c[0] + dot_r, dot_c[1] + dot_r], fill=TEAL + (255,))
+    draw_stroke_path(gd, [F(p) for p in glyph_path], stroke_w, TEAL + (255,))
+    draw_stroke_path(gd, [F(p) for p in CROSSBAR], stroke_w, TEAL + (255,))
+    dc = F((DOT[0], DOT[1]))
+    gd.ellipse([dc[0] - dot_r, dc[1] - dot_r, dc[0] + dot_r, dc[1] + dot_r], fill=TEAL + (255,))
 
     # 3. Soft glow behind the glyph
     glow_alpha = glyph.split()[3]

@@ -110,32 +110,12 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Wordmark logo (navy banner, "f" curling into "?")
+                    // Wordmark logo (transparent, turquoise "?"→F glyph + text)
                     SizedBox(
-                      width: 280,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primary.withValues(alpha: 0.5),
-                              blurRadius: 40,
-                              offset: const Offset(0, 14),
-                            ),
-                            BoxShadow(
-                              color: AppTheme.secondary.withValues(alpha: 0.3),
-                              blurRadius: 70,
-                              offset: const Offset(0, 26),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: AspectRatio(
-                            aspectRatio: 720 / 260,
-                            child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
-                          ),
-                        ),
+                      width: 320,
+                      child: AspectRatio(
+                        aspectRatio: 820 / 260,
+                        child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
                       ),
                     ),
                     const SizedBox(height: 32),

@@ -1,17 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260">
-  <!-- Dark navy background banner -->
-  <rect width="720" height="260" rx="42" fill="#0F172A"/>
-
-  <!-- Wordmark: "f" curls into a "?" at its foot, then reads on as "arketmez" -->
-  <g fill="none" stroke="#06B6D4" stroke-width="20"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 260">
+  <!-- Wordmark only, no background: first char is a mirrored "?" (hook opens
+       to the right) with a horizontal bar through its stem, reading as "F" -->
+  <g fill="none" stroke="#06B6D4" stroke-width="30"
      stroke-linecap="round" stroke-linejoin="round">
-    <path d="M125,58 Q97,50 95,80 L95,140 Q162,144 150,180 Q134,208 94,218"/>
-    <path d="M65,92 L120,92"/>
+    <!-- mirrored question-mark hook + stem -->
+    <path d="M138.3,57.9
+             C124.8,41.8 102.7,35.8 82.9,43
+             C63.1,50.2 50,69 50,90
+             C50,111 63.1,129.8 82.9,137
+             C102.7,144.2 124.8,138.2 138.3,122.1
+             Q125,148 103,160
+             L103,195"/>
+    <!-- horizontal bar through the stem, evoking "F" -->
+    <path d="M65,153 L143,153"/>
   </g>
-  <circle cx="94" cy="235" r="9" fill="#06B6D4"/>
+  <circle cx="103" cy="225" r="12" fill="#06B6D4"/>
 
-  <text x="195" y="140"
-        font-family="Roboto, 'Segoe UI', Arial, sans-serif"
-        font-size="104" font-weight="600"
-        fill="#FFFFFF" letter-spacing="1">arketmez</text>
+  <text x="165" y="205"
+        font-family="PlayfairDisplay, 'Playfair Display', Georgia, serif"
+        font-style="italic" font-weight="600" font-size="150"
+        fill="#06B6D4">arketmez</text>
 </svg>

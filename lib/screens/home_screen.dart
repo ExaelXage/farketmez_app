@@ -356,22 +356,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             animation: _logoPulse,
             builder: (_, child) => Transform.scale(scale: _logoPulse.value, child: child),
             child: SizedBox(
-              width: 260,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(color: AppTheme.primary.withValues(alpha: 0.5), blurRadius: 40, offset: const Offset(0, 14)),
-                    BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.28), blurRadius: 70, offset: const Offset(0, 24)),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: AspectRatio(
-                    aspectRatio: 720 / 260,
-                    child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
-                  ),
-                ),
+              width: 300,
+              child: AspectRatio(
+                aspectRatio: 820 / 260,
+                child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
               ),
             ),
           ),
