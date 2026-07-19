@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
@@ -160,17 +161,14 @@ class _SplashScreenState extends State<SplashScreen>
                       opacity: _textFade,
                       child: Column(
                         children: [
-                          ShaderMask(
-                            shaderCallback: (b) =>
-                                AppTheme.primaryGradient.createShader(b),
-                            child: const Text(
-                              'Farketmez',
-                              style: TextStyle(
-                                fontSize: 42,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: -1.2,
-                              ),
+                          Text(
+                            'farketmez',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 42,
+                              fontWeight: FontWeight.w600,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
                             ),
                           ),
                           const SizedBox(height: 8),

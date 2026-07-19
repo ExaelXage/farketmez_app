@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../services/profile_service.dart';
@@ -387,11 +388,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         const SizedBox(height: 24),
-        ShaderMask(
-          shaderCallback: (b) => AppTheme.primaryGradient.createShader(b),
-          child: const Text('Farketmez',
-              style: TextStyle(fontSize: 44, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -1.5)),
-        ),
+        Text('farketmez',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 44,
+              fontWeight: FontWeight.w600,
+              fontStyle: FontStyle.italic,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            )),
         const SizedBox(height: 8),
         Text('Nereye gidilir karar verelim',
             style: TextStyle(fontSize: 15, color: AppTheme.textSecondary, letterSpacing: 0.2)),

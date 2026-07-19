@@ -298,7 +298,7 @@ class _ResultScreenState extends State<ResultScreen> with TickerProviderStateMix
   Widget _buildWinnerSection() {
     final isFate = _reason.isFate;
     final badgeGradient = isFate
-        ? const LinearGradient(colors: [Color(0xFF0EA5E9), Color(0xFF7C3AED)], begin: Alignment.topLeft, end: Alignment.bottomRight)
+        ? const LinearGradient(colors: [Color(0xFF0EA5E9), Color(0xFF0F172A)], begin: Alignment.topLeft, end: Alignment.bottomRight)
         : AppTheme.primaryGradient;
     final badgeColor = isFate ? AppTheme.secondary : AppTheme.primary;
 
