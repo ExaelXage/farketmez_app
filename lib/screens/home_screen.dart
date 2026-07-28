@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
@@ -355,22 +354,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: AnimatedBuilder(
             animation: _logoPulse,
             builder: (_, child) => Transform.scale(scale: _logoPulse.value, child: child),
-            child: SizedBox(
-              width: 300,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 26,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
+            child: Container(
+              width: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 26,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
                 child: AspectRatio(
-                  aspectRatio: 900 / 220,
-                  child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
+                  aspectRatio: 1792 / 1613,
+                  child: Image.asset('assets/logo.png', fit: BoxFit.cover),
                 ),
               ),
             ),

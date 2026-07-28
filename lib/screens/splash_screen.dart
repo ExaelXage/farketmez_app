@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
@@ -110,23 +109,24 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Wordmark logo (white card, turquoise glyph + text)
-                    SizedBox(
-                      width: 320,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              blurRadius: 30,
-                              offset: const Offset(0, 12),
-                            ),
-                          ],
-                        ),
+                    // Logo lockup (pin + F/? glyph + wordmark on teal-navy gradient)
+                    Container(
+                      width: 220,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 30,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
                         child: AspectRatio(
-                          aspectRatio: 900 / 220,
-                          child: SvgPicture.asset('assets/logo.svg', fit: BoxFit.contain),
+                          aspectRatio: 1792 / 1613,
+                          child: Image.asset('assets/logo.png', fit: BoxFit.cover),
                         ),
                       ),
                     ),

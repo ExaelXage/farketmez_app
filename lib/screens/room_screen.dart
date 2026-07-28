@@ -51,6 +51,7 @@ class _RoomScreenState extends State<RoomScreen>
   String _startingMessage = 'Mekanlar aranıyor...';
   bool _isFinishing = false;
   bool _isAddingCategory = false;
+  bool _isAddingPlace = false;
   final Set<String> _selectedWaitingCategories = {};
   double? _searchLat;
   double? _searchLng;
@@ -137,6 +138,17 @@ class _RoomScreenState extends State<RoomScreen>
           }
         } else if (newStatus == 'completed') {
           _goToResults(data);
+        }
+      } else if (_isVoting) {
+        // Durum aynı kaldı ama başka bir katılımcı mekan eklemiş olabilir
+        final rawPlaces = List<Map<String, dynamic>>.from(data['places'] ?? []);
+        final existingIds = _places.map((p) => p.id).toSet();
+        final newOnes = rawPlaces
+            .where((p) => !existingIds.contains((p['id'] as num?)?.toInt()))
+            .map((p) => Place.fromJson(p))
+            .toList();
+        if (newOnes.isNotEmpty) {
+          setState(() => _places = [..._places, ...newOnes]);
         }
       }
       _pollFailCount = 0;
@@ -549,6 +561,7 @@ class _RoomScreenState extends State<RoomScreen>
       'amusement_center':'Eğlence Merkezi',
       'cinema':          'Sinema',
       'theatre':         'Tiyatro',
+      'custom':          'Katılımcı Önerisi',
     };
     return labels[raw] ?? raw;
   }
@@ -945,6 +958,7 @@ class _RoomScreenState extends State<RoomScreen>
         _buildVotingHeader(),
         _buildVoteCounter(),
         _buildCategoryFilters(),
+        _buildAddPlaceButton(),
         TabBar(
           controller: _tabController,
           indicatorColor: AppTheme.primary,
@@ -1183,6 +1197,161 @@ class _RoomScreenState extends State<RoomScreen>
         const SizedBox(height: 4),
       ],
     );
+  }
+
+  Widget _buildAddPlaceButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: GestureDetector(
+        onTap: _isAddingPlace ? null : _showAddPlaceSheet,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
+          ),
+          child: _isAddingPlace
+              ? const Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppTheme.primary),
+                  ),
+                )
+              : const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_location_alt_outlined,
+                        color: AppTheme.primary, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Mekan Ekle',
+                      style: TextStyle(
+                          color: AppTheme.primary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddPlaceSheet() {
+    final controller = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Mekan Ekle',
+              style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Eklediğin mekan listeye eklenir ve herkes tarafından oylanabilir',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+              decoration: InputDecoration(
+                hintText: 'Mekan adı',
+                hintStyle: const TextStyle(color: AppTheme.textSecondary),
+                prefixIcon:
+                    const Icon(Icons.storefront_outlined, color: AppTheme.primary),
+                filled: true,
+                fillColor: const Color(0xFF1A1A35),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onSubmitted: (v) {
+                Navigator.pop(ctx);
+                _submitAddPlace(v);
+              },
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(ctx);
+                _submitAddPlace(controller.text);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Ekle',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitAddPlace(String rawName) async {
+    final name = rawName.trim();
+    if (name.isEmpty) return;
+
+    setState(() => _isAddingPlace = true);
+    try {
+      final data = await apiService.addPlace(code: widget.roomCode, name: name);
+      final place = Place.fromJson(Map<String, dynamic>.from(data['place']));
+      if (!mounted) return;
+      setState(() {
+        _places = [..._places, place];
+        _isAddingPlace = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"$name" listeye eklendi'),
+          backgroundColor: AppTheme.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isAddingPlace = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(toTurkishError(e)),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Widget _buildPlacesList() {

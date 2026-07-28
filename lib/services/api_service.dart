@@ -341,6 +341,18 @@ class ApiService {
     return Map<String, dynamic>.from(response.data);
   }
 
+  Future<Map<String, dynamic>> addPlace({
+    required String code,
+    required String name,
+  }) async {
+    final response = await _dio.post(
+      '/api/flutter/room/$code/add_place',
+      data: _body({'name': name}),
+      options: _plainOpts,
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
   Future<Map<String, dynamic>> finishVoting(String code) async {
     final response = await _dio.post(
       '/api/flutter/room/$code/finish',
