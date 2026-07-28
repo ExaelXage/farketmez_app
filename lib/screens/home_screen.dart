@@ -337,6 +337,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       const SizedBox(width: 4),
                       Text('Konum alındı', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                     ])),
+                  const SizedBox(height: 32),
+                  _buildHowItWorks(),
                 ],
               ),
             ),
@@ -377,9 +379,84 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         const SizedBox(height: 24),
-        Text('Nereye gidilir karar verelim',
+        Text('Nereye gideceğiz? Artık Farketmez!',
             style: TextStyle(fontSize: 15, color: AppTheme.textSecondary, letterSpacing: 0.2)),
       ],
+    );
+  }
+
+  Widget _buildHowItWorks() {
+    const steps = [
+      ('🏠', 'Oda Aç', 'Kategori seç ve oda oluştur'),
+      ('👥', 'Arkadaşlarını Davet Et', 'Kodu paylaş, katılsınlar'),
+      ('🗳️', 'Oyla ve Karar Ver', 'Yakındaki mekanları oylayın, kazanan belli olsun'),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Nasıl Kullanılır?',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (int i = 0; i < steps.length; i++) ...[
+            if (i != 0) const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(steps[i].$1, style: const TextStyle(fontSize: 20)),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        steps[i].$2,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        steps[i].$3,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppTheme.textSecondary,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 
