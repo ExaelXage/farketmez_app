@@ -697,6 +697,57 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
+  void _copyRoomCode() {
+    Clipboard.setData(ClipboardData(text: widget.roomCode));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Kod kopyalandı!'),
+        duration: Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Widget _buildVotingRoomCodeBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+      child: GestureDetector(
+        onTap: _copyRoomCode,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.border),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.meeting_room_outlined,
+                  color: AppTheme.secondary, size: 14),
+              const SizedBox(width: 8),
+              Text('Oda Kodu',
+                  style: TextStyle(
+                      color: AppTheme.textSecondary, fontSize: 12)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  widget.roomCode,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
+              Icon(Icons.copy_rounded, color: AppTheme.secondary, size: 15),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildRoomCode() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -726,17 +777,7 @@ class _RoomScreenState extends State<RoomScreen>
           ),
           const SizedBox(height: 12),
           GestureDetector(
-            onTap: () {
-              Clipboard.setData(
-                  ClipboardData(text: widget.roomCode));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Kod kopyalandı!'),
-                  duration: Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            onTap: _copyRoomCode,
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -956,6 +997,7 @@ class _RoomScreenState extends State<RoomScreen>
       children: [
         _buildOfflineBanner(),
         _buildVotingHeader(),
+        _buildVotingRoomCodeBar(),
         _buildVoteCounter(),
         _buildCategoryFilters(),
         _buildAddPlaceButton(),
